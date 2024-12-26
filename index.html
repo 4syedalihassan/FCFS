@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FCFS Process Scheduler</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #3b82f6;
+            --success-color: #22c55e;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --background-color: #f8fafc;
+            --card-background: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: var(--card-background);
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        .header h1 {
+            color: var(--primary-color);
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+        }
+
+        .card {
+            background: var(--card-background);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .input-group label {
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .input-group input {
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            transition: background-color 0.3s ease;
+            color: white;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: var(--background-color);
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        tr:hover {
+            background-color: var(--background-color);
+        }
+
+        .gantt-chart {
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            background-color: var(--background-color);
+            border-radius: 0.5rem;
+            overflow-x: auto;
+        }
+
+        .timeline {
+            position: relative;
+            height: 60px;
+            margin-top: 1rem;
+        }
+
+        .process-block {
+            position: absolute;
+            height: 40px;
+            background-color: var(--primary-color);
+            border-radius: 0.25rem;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            transition: all 0.3s;
+        }
+
+        .process-block:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        .time-markers {
+            position: relative;
+            height: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .time-marker {
+            position: absolute;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .grid-line {
+            position: absolute;
+            height: 100%;
+            width: 1px;
+            background-color: var(--border-color);
+            z-index: 0;
+        }
+
+        .process-block {
+            position: relative;
+            z-index: 1;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: var(--card-background);
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: none;
+            z-index: 100;
+        }
+
+        .process-block:hover .tooltip {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .process-block {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .stat-card {
+            animation: fadeIn 0.3s ease-in;
+            transition: transform 0.2s;
+        }
+
+        .welcome-message {
+            padding: 1rem;
+            background-color: var(--background-color);
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .welcome-message h3 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .welcome-message ol {
+            margin-left: 1.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .welcome-message li {
+            margin-bottom: 0.25rem;
+            color: var(--text-secondary);
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: slideIn 0.3s ease;
+        }
+
+        .alert-danger {
+            background-color: #FEE2E2;
+            color: #DC2626;
+            border: 1px solid #FCA5A5;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .process-label {
+            font-weight: bold;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        .results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--card-background);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-microchip"></i> FCFS Process Scheduler</h1>
+            <p>First Come First Serve CPU Scheduling Algorithm Simulator</p>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title"><i class="fas fa-plus-circle"></i> Add New Process</h2>
+            <div class="input-grid">
+                <div class="input-group">
+                    <label for="processId">Process ID</label>
+                    <input type="number" id="processId" min="1" required placeholder="Enter Process ID">
+                </div>
+                <div class="input-group">
+                    <label for="burstTime">Burst Time (ms)</label>
+                    <input type="number" id="burstTime" min="1" required placeholder="Enter Burst Time">
+                </div>
+                <!--
+		<div class="input-group">
+                    <label for="priority">Priority (Optional)</label>
+                    <input type="number" id="priority" min="1" placeholder="Enter Priority">
+                </div>
+		-->
+            </div>
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="addProcess()">
+                    <i class="fas fa-plus"></i> Add Process
+                </button>
+                <button class="btn btn-success" onclick="calculateFCFS()">
+                    <i class="fas fa-play"></i> Run Simulation
+                </button>
+                <button class="btn btn-danger" onclick="clearAll()">
+                    <i class="fas fa-trash"></i> Clear All
+                </button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title"><i class="fas fa-table"></i> Process Queue</h2>
+            <div class="table-container">
+                <table id="processTable">
+                    <thead>
+                        <tr>
+                            <th>Process ID</th>
+                            <th>Arrival Time</th>
+                            <th>Burst Time</th>
+                            <th>Waiting Time</th>
+                            <th>Turnaround Time</th>
+                            <th>Priority</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title"><i class="fas fa-chart-bar"></i> Gantt Chart</h2>
+            <div id="ganttChart" class="gantt-chart">
+                <div class="timeline" id="timeline"></div>
+                <div class="time-markers" id="timeMarkers"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title"><i class="fas fa-chart-line"></i> Statistics</h2>
+            <div id="results" class="results">
+                <!-- Results will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let processes = [];
+        let isSimulationRunning = false;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            showWelcomeMessage();
+        });
+
+        function showWelcomeMessage() {
+            const welcomeHtml = `
+                <div class="welcome-message">
+                    <h3>Welcome to FCFS Process Scheduler</h3>
+                    <p>Follow these steps to get started:</p>
+                    <ol>
+                        <li>Add processes using the form above</li>
+                        <li>Set burst time for each process</li>
+                        <li>Optionally add priority</li>
+                        <li>Click 'Run Simulation' to see results</li>
+                    </ol>
+                </div>
+            `;
+            document.getElementById('results').innerHTML = welcomeHtml;
+        }
+
+        function validateInputs(processId, burstTime) {
+            if (!processId || !burstTime) {
+                showError('Please fill in all required fields');
+                return false;
+            }
+            if (parseInt(processId) < 1) {
+                showError('Process ID must be positive');
+                return false;
+            }
+            if (parseInt(burstTime) < 1) {
+                showError('Burst time must be positive');
+                return false;
+            }
+            if (processes.some(p => p.processId === parseInt(processId))) {
+                showError('Process ID must be unique');
+                return false;
+            }
+            return true;
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-danger';
+            errorDiv.innerHTML = `
+                <i class="fas fa-exclamation-circle"></i>
+                ${message}
+            `;
+            const buttonGroup = document.querySelector('.button-group');
+            buttonGroup.parentNode.insertBefore(errorDiv, buttonGroup);
+            setTimeout(() => errorDiv.remove(), 3000);
+        }
+
+        function addProcess() {
+            const processId = document.getElementById('processId').value;
+            const burstTime = document.getElementById('burstTime').value;
+            const priority = document.getElementById('priority').value || null;
+            
+            if (!validateInputs(processId, burstTime)) {
+                return;
+            }
+
+            const process = {
+                processId: parseInt(processId),
+                arrivalTime: processes.length,
+                burstTime: parseInt(burstTime),
+                priority: priority ? parseInt(priority) : null,
+                waitingTime: 0,
+                turnaroundTime: 0
+            };
+
+            processes.push(process);
+            updateTable();
+            clearInputs();
+        }
+
+        function clearInputs() {
+            document.getElementById('processId').value = '';
+            document.getElementById('burstTime').value = '';
+            document.getElementById('priority').value = '';
+        }
+
+        function updateTable() {
+            const tbody = document.querySelector('#processTable tbody');
+            tbody.innerHTML = '';
+            
+            processes.forEach(process => {
+                const row = tbody.insertRow();
+                row.insertCell().textContent = process.processId;
+                row.insertCell().textContent = process.arrivalTime;
+                row.insertCell().textContent = process.burstTime;
+                row.insertCell().textContent = process.waitingTime;
+                row.insertCell().textContent = process.turnaroundTime;
+                row.insertCell().textContent = process.priority || '-';
+            });
+        }
+
+        function calculateFCFS() {
+            if (processes.length === 0) {
+                showError('Please add processes first');
+                return;
+            }
+
+            let currentTime = 0;
+            let totalWaitingTime = 0;
+            let totalTurnaroundTime = 0;
+
+            processes.sort((a, b) => a.arrivalTime - b.arrivalTime);
+
+            processes.forEach(process => {
+                process.waitingTime = Math.max(0, currentTime - process.arrivalTime);
+                process.turnaround = process.waitingTime + process.burstTime;
+                
+                totalWaitingTime += process.waitingTime;
+                totalTurnaroundTime += process.turnaroundTime;
+                currentTime += process.burstTime;
+            });
+
+            updateTable();
+            drawGanttChart();
+            showResults(totalWaitingTime, totalTurnaroundTime);
+            runSimulation();
+        }
+
+        function drawGanttChart() {
+            const timeline = document.getElementById('timeline');
+            const timeMarkers = document.getElementById('timeMarkers');
+            timeline.innerHTML = '';
+            timeMarkers.innerHTML = '';
+            
+            let currentTime = 0;
+            const timeScale = 50;
+
+            processes.forEach(process => {
+                const block = document.createElement('div');
+                block.className = 'process-block';
+                block.style.left = (currentTime * timeScale) + 'px';
+                block.style.width = (process.burstTime * timeScale) + 'px';
+                block.setAttribute('data-process-id', process.processId);
+                block.innerHTML = `
+                    <div class="process-label">P${process.processId}</div>
+                    <div class="tooltip">
+                        <div>Process ${process.processId}</div>
+                        <div>Burst Time: ${process.burstTime}ms</div>
+                        <div>Waiting Time: ${process.waitingTime}ms</div>
+                        <div>Turnaround Time: ${process.turnaroundTime}ms</div>
+                    </div>
+                `;
+                timeline.appendChild(block);
+
+                const marker = document.createElement('div');
+                marker.className = 'time-marker';
+                marker.style.left = (currentTime * timeScale) + 'px';
+                marker.textContent = currentTime + 'ms';
+                timeMarkers.appendChild(marker);
+
+                currentTime += process.burstTime;
+            });
+
+            const finalMarker = document.createElement('div');
+            finalMarker.className = 'time-marker';
+            finalMarker.style.left = (currentTime * timeScale) + 'px';
+            finalMarker.textContent = currentTime + 'ms';
+            timeMarkers.appendChild(finalMarker);
+        }
+
+        function showResults(totalWaitingTime, totalTurnaroundTime) {
+            const avgWaitingTime = totalWaitingTime / processes.length;
+            const avgTurnaroundTime = totalTurnaroundTime / processes.length;
+            const throughput = processes.length / (processes.reduce((sum, p) => sum + p.burstTime, 0));
+            
+            const results = document.getElementById('results');
+            results.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${avgWaitingTime.toFixed(2)}ms</div>
+                    <div class="stat-label">Average Waiting Time</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${avgTurnaroundTime.toFixed(2)}ms</div>
+                    <div class="stat-label">Average Turnaround Time</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${throughput.toFixed(4)}</div>
+                    <div class="stat-label">Throughput (processes/ms)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${processes.length}</div>
+                    <div class="stat-label">Total Processes</div>
+                </div>
+            `;
+        }
+
+        async function runSimulation() {
+            if (isSimulationRunning) return;
+            isSimulationRunning = true;
+            
+            const timeline = document.getElementById('timeline');
+            const processBlocks = timeline.getElementsByClassName('process-block');
+            const styles = getComputedStyle(document.documentElement);
+            
+            for (let block of processBlocks) {
+                block.style.backgroundColor = styles.getPropertyValue('--success-color').trim();
+                await new Promise(resolve => setTimeout(resolve, 500));
+                block.style.backgroundColor = styles.getPropertyValue('--primary-color').trim();
+            }
+            
+            isSimulationRunning = false;
+        }
+
+        function clearAll() {
+            processes = [];
+            updateTable();
+            const timeline = document.getElementById('timeline');
+            const timeMarkers = document.getElementById('timeMarkers');
+            timeline.innerHTML = '';
+            timeMarkers.innerHTML = '';
+            showWelcomeMessage();
+            clearInputs();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'Enter':
+                        calculateFCFS();
+                        break;
+                    case 'Delete':
+                        clearAll();
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
