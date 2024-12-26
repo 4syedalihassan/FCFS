@@ -365,18 +365,16 @@
             <div class="input-grid">
                 <div class="input-group">
                     <label for="processId">Process ID</label>
-                    <input type="number" id="processId" min="1" required placeholder="Enter Process ID">
+                    <input type="number" id="processId" min="0" required placeholder="Enter Process ID">
                 </div>
                 <div class="input-group">
                     <label for="burstTime">Burst Time (ms)</label>
                     <input type="number" id="burstTime" min="1" required placeholder="Enter Burst Time">
                 </div>
-                <!--
 		<div class="input-group">
                     <label for="priority">Priority (Optional)</label>
                     <input type="number" id="priority" min="1" placeholder="Enter Priority">
                 </div>
-		-->
             </div>
             <div class="button-group">
                 <button class="btn btn-primary" onclick="addProcess()">
